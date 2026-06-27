@@ -7,18 +7,23 @@
         body { font-family: sans-serif; text-align: center; padding-top: 50px; }
         #webcam-container { margin-top: 20px; }
         #label-container { margin-top: 20px; font-size: 24px; font-weight: bold; color: #007bff; }
-        button { padding: 10px 20px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; background-color: #28a745; color: white; }
+        button { padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 10px; border: none; background-color: #28a745; color: white; }
     </style>
 </head>
 <body>
     <h1>AI Deteksi Objek</h1>
+    <!-- Tombol ini memanggil fungsi init() untuk menyalakan kamera -->
     <button type="button" onclick="init()">Mulai Kamera</button>
+    
     <div id="webcam-container"></div>
     <div id="label-container"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+    <!-- Pustaka Penting yang Harus Ada (Source [3]) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
     <script type="text/javascript">
-        // Link model Anda yang tadi disalin
+        // Link model Anda (Source [4, 5])
         const URL = "https://teachablemachine.withgoogle.com/models/B_Nskjgzu/";
 
         let model, webcam, labelContainer, maxPredictions;
@@ -26,15 +31,19 @@
         async function init() {
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
+
+            // Memuat "Otak" AI
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
 
+            // Menyiapkan Kamera
             const flip = true; 
             webcam = new tmImage.Webcam(300, 300, flip); 
-            await webcam.setup(); 
-            await webcam.play();
+            await webcam.setup(); // Meminta izin kamera
+            await webcam.play(); // Menjalankan streaming kamera
             window.requestAnimationFrame(loop);
 
+            // Menampilkan hasil kamera ke layar
             document.getElementById("webcam-container").appendChild(webcam.canvas);
             labelContainer = document.getElementById("label-container");
         }
