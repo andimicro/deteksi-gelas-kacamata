@@ -2,50 +2,88 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Deteksi Gelas dan Kacamata</title>
+    <!-- BARIS PENTING: Membuat tampilan menyesuaikan lebar layar HP (Source: [2]) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deteksi AI Responsif</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
-        #webcam-container { margin-top: 20px; }
-        #label-container { margin-top: 20px; font-size: 24px; font-weight: bold; color: #007bff; }
-        button { padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 10px; border: none; background-color: #28a745; color: white; }
+        body { 
+            font-family: sans-serif; 
+            text-align: center; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f0f2f5; 
+        }
+        h1 { font-size: 1.5rem; color: #333; }
+        /* Mengatur agar container kamera selebar layar HP (Source: [4]) */
+        #webcam-container { 
+            margin-top: 15px; 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+        }
+        /* Membuat gambar kamera (canvas) otomatis melebar 100% (Source: [3]) */
+        canvas { 
+            width: 100% !important; 
+            max-width: 500px; /* Batas maksimal agar tidak pecah di tablet/laptop */
+            height: auto !important; 
+            border-radius: 15px; 
+            border: 4px solid #fff; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        }
+        #label-container { 
+            margin-top: 20px; 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            color: #d9534f; 
+        }
+        button { 
+            width: 100%; 
+            max-width: 300px; 
+            padding: 15px; 
+            font-size: 1.2rem; 
+            cursor: pointer; 
+            border-radius: 50px; 
+            border: none; 
+            background-color: #0275d8; 
+            color: white; 
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h1>AI Deteksi Objek</h1>
-    <!-- Tombol ini memanggil fungsi init() untuk menyalakan kamera -->
-    <button type="button" onclick="init()">Mulai Kamera</button>
-    
+    <h1>AI Deteksi Gelas & Kacamata</h1>
+    <button type="button" onclick="init()">MULAI KAMERA</button>
     <div id="webcam-container"></div>
     <div id="label-container"></div>
 
-    <!-- Pustaka Penting yang Harus Ada (Source [3]) -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
     <script type="text/javascript">
-        // Link model Anda (Source [4, 5])
         const URL = "https://teachablemachine.withgoogle.com/models/B_Nskjgzu/";
-
         let model, webcam, labelContainer, maxPredictions;
 
         async function init() {
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
-
-            // Memuat "Otak" AI
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
 
-            // Menyiapkan Kamera
-            const flip = true; 
-            webcam = new tmImage.Webcam(300, 300, flip); 
-            await webcam.setup(); // Meminta izin kamera
-            await webcam.play(); // Menjalankan streaming kamera
-            window.requestAnimationFrame(loop);
+            // Gunakan kamera belakang (environment) (Source: [5])
+            const flip = false; 
+            webcam = new tmImage.Webcam(400, 400, flip); 
+            
+            try {
+                await webcam.setup({ facingMode: "environment" }); 
+                await webcam.play();
+                window.requestAnimationFrame(loop);
 
-            // Menampilkan hasil kamera ke layar
-            document.getElementById("webcam-container").appendChild(webcam.canvas);
-            labelContainer = document.getElementById("label-container");
+                document.getElementById("webcam-container").innerHTML = "";
+                document.getElementById("webcam-container").appendChild(webcam.canvas);
+                labelContainer = document.getElementById("label-container");
+            } catch (e) {
+                alert("Gagal akses kamera: " + e);
+            }
         }
 
         async function loop() {
@@ -58,7 +96,6 @@
             const prediction = await model.predict(webcam.canvas);
             let highestProb = 0;
             let bestLabel = "";
-            
             for (let i = 0; i < maxPredictions; i++) {
                 if (prediction[i].probability > highestProb) {
                     highestProb = prediction[i].probability;
